@@ -5,25 +5,32 @@ ARG DEBIAN_FRONTEND=noninteractive
 ENV TZ=Europe/Madrid
 
 RUN apt-get update && apt-get install -yq --no-install-recommends \
-  	curl git apt-transport-https ca-certificates software-properties-common gnupg && \
-	curl -fsSL https://bazel.build/bazel-release.pub.gpg | gpg --dearmor > bazel.gpg && \
-	mv bazel.gpg /etc/apt/trusted.gpg.d/ && \
-	echo "deb [arch=amd64] https://storage.googleapis.com/bazel-apt stable jdk1.8" | tee /etc/apt/sources.list.d/bazel.list && \
-	apt-get update && \
-	apt-get install -yq --no-install-recommends \
-	build-essential bc make cmake libopencv-dev python3-opencv bazel libnetpbm10-dev xxd \
-    libjpeg-turbo-progs imagemagick-6.q16 jq automake g++ libtool libleptonica-dev pkg-config nasm ninja-build \
-    meson doxygen libx264-dev libx265-dev libnuma-dev && \
+	curl git apt-transport-https ca-certificates software-properties-common gnupg && \
+	apt-get update && apt-get install -yq --no-install-recommends \
+	build-essential bc make cmake libopencv-dev python3-opencv libnetpbm10-dev xxd \
+	libjpeg-turbo-progs imagemagick-6.q16 jq automake g++ libtool libleptonica-dev pkg-config nasm ninja-build \
+	meson doxygen libx264-dev libx265-dev libnuma-dev && \
 	pkg-config --cflags --libs opencv4 && \
 	rm -rf /var/lib/apt/lists/*
 
 # Install dependencies that can't be installed via apt-get
+
+# Setup bazel
+
+RUN curl -fsSL https://bazel.build/bazel-release.pub.gpg | gpg --dearmor > bazel.gpg && \
+	mv bazel.gpg /etc/apt/trusted.gpg.d/ && \
+	echo "deb [arch=amd64 signed-by=/etc/apt/trusted.gpg.d/bazel.gpg]  https://storage.googleapis.com/bazel-apt stable jdk1.8" | tee /etc/apt/sources.list.d/bazel.list
+
+# Install necessary dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends bazel-3.1.0 git && \
+	ln -s /usr/bin/bazel-3.1.0 /usr/bin/bazel
+
 # Build VMAF
 FROM base AS vmaf
 WORKDIR /tmp
 RUN curl --output "/tmp/vmaf.tar.gz" \
-        --continue-at - \
-        --location "https://github.com/Netflix/vmaf/archive/refs/tags/v2.3.0.tar.gz"
+	--continue-at - \
+	--location "https://github.com/Netflix/vmaf/archive/refs/tags/v2.3.0.tar.gz"
 RUN tar -xvf vmaf.tar.gz
 WORKDIR /tmp/vmaf-2.3.0/libvmaf/
 RUN meson build --buildtype release && \
@@ -48,10 +55,17 @@ FROM base AS visqol
 # Build VISQOL
 WORKDIR /tmp
 RUN curl --output "/tmp/visqol.tar.gz" \
-        --continue-at - \
-        --location "https://github.com/google/visqol/archive/refs/tags/v3.1.0.tar.gz"
+	--continue-at - \
+	--location "https://github.com/google/visqol/archive/refs/tags/v3.1.0.tar.gz"
 RUN tar -xvf visqol.tar.gz
 WORKDIR /tmp/visqol-3.1.0/
+
+# Build your target using Bazel with appropriate platform constraints
+# Clone platforms repository
+
+# RUN git clone https://github.com/bazelbuild/platforms.git /tmp/platforms && \
+# 	bazel build --platforms=//:x86_64 :visqol -c opt
+
 RUN bazel build :visqol -c opt
 
 FROM base AS tesseract
@@ -59,8 +73,8 @@ FROM base AS tesseract
 ## Building tesseract ST for better performance, check https://tesseract-ocr.github.io/tessdoc/Compiling-%E2%80%93-GitInstallation.html#release-builds-for-mass-production
 WORKDIR /tmp
 RUN curl --output "/tmp/tesseract.tar.gz" \
-        --continue-at - \
-        --location "https://github.com/tesseract-ocr/tesseract/archive/refs/tags/4.1.3.tar.gz"
+	--continue-at - \
+	--location "https://github.com/tesseract-ocr/tesseract/archive/refs/tags/4.1.3.tar.gz"
 RUN tar -xvf tesseract.tar.gz
 WORKDIR /tmp/tesseract-4.1.3/
 RUN ./autogen.sh && \
@@ -83,7 +97,7 @@ ENV PYTHONPATH=/opt/openvidu-loadtest/browser-emulator
 
 # Install dependencies
 RUN apt-get update && apt-get install -yq --no-install-recommends \
-  	curl apt-transport-https ca-certificates software-properties-common python3-pip gnupg git && \
+	curl apt-transport-https ca-certificates software-properties-common python3-pip gnupg git && \
 	curl -sL https://deb.nodesource.com/setup_18.x | bash - && \
 	apt-get install -yq --no-install-recommends \
 	nodejs ffmpeg libopencv-dev python3-opencv jq pkg-config && \
@@ -144,11 +158,11 @@ COPY --from=tesseract /usr/lib/ /usr/lib/
 COPY --from=tesseract /usr/lib64/ /usr/lib64/
 # Get tesseract
 RUN curl --output "/usr/local/share/tessdata/eng.traineddata" \
-        --continue-at - \
-        --location "https://github.com/tesseract-ocr/tessdata/raw/main/eng.traineddata"
+	--continue-at - \
+	--location "https://github.com/tesseract-ocr/tessdata/raw/main/eng.traineddata"
 
+# TODO: fix build in image process
 COPY browser-emulator/ .
-RUN npm run build
 
 EXPOSE 5000
 EXPOSE 5001
