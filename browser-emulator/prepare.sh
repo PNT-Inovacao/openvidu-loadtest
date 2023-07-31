@@ -18,9 +18,9 @@ SELF_PATH="$(cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)" # Absolute
 apt-get update
 apt-get upgrade -yq
 apt-get install -yq --no-install-recommends \
-  	curl git apt-transport-https ca-certificates software-properties-common gnupg python3-pip
-curl -sL https://deb.nodesource.com/setup_18.x | bash - 
-curl -fsSL https://bazel.build/bazel-release.pub.gpg | gpg --dearmor > bazel.gpg
+    curl git apt-transport-https ca-certificates software-properties-common gnupg python3-pip
+curl -sL https://deb.nodesource.com/setup_18.x | bash -
+curl -fsSL https://bazel.build/bazel-release.pub.gpg | gpg --dearmor >bazel.gpg
 mv bazel.gpg /etc/apt/trusted.gpg.d/
 echo "deb [arch=amd64] https://storage.googleapis.com/bazel-apt stable jdk1.8" | tee /etc/apt/sources.list.d/bazel.list
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
@@ -28,7 +28,7 @@ source /etc/lsb-release # Get Ubuntu version definitions (DISTRIB_CODENAME).
 add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $DISTRIB_CODENAME stable"
 apt-get update
 apt-get install -yq --no-install-recommends \
-	build-essential bc make cmake libopencv-dev python3-opencv bazel libnetpbm10-dev xxd \
+    build-essential bc make cmake libopencv-dev python3-opencv bazel libnetpbm10-dev xxd \
     libjpeg-turbo-progs imagemagick-6.q16 jq automake g++ libtool libleptonica-dev pkg-config nasm ninja-build \
     meson doxygen libx264-dev libx265-dev libnuma-dev \
     ffmpeg docker-ce xvfb linux-modules-extra-$(uname -r) pulseaudio nodejs dkms
@@ -44,7 +44,7 @@ sudo dkms build -m v4l2loopback -v ${v4l2_version}
 sudo dkms install -m v4l2loopback -v ${v4l2_version}
 cd $SELF_PATH
 sudo modprobe v4l2loopback devices=1 exclusive_caps=1
-echo "v4l2loopback" | tee /etc/modules-load.d/v4l2loopback.conf 
+echo "v4l2loopback" | tee /etc/modules-load.d/v4l2loopback.conf
 echo "options v4l2loopback devices=1 exclusive_caps=1" | tee /etc/modprobe.d/v4l2loopback.conf
 sudo update-initramfs -c -k $(uname -r)
 # Add user ubuntu to docker and syslog groups
@@ -63,7 +63,7 @@ install_chrome() {
 install_vmaf() {
     ## Install VMAF
     if [[ ! -f "/usr/local/bin/vmaf" ]]; then
-    curl --output "/tmp/vmaf.tar.gz" \
+        curl --output "/tmp/vmaf.tar.gz" \
             --continue-at - \
             --location "https://github.com/Netflix/vmaf/archive/refs/tags/v2.3.0.tar.gz"
     fi
@@ -123,8 +123,8 @@ install_pesq() {
 install_visqol() {
     ## Install VISQOL
     curl --output "/tmp/visqol.tar.gz" \
-            --continue-at - \
-            --location "https://github.com/google/visqol/archive/refs/tags/v3.3.3.tar.gz"
+        --continue-at - \
+        --location "https://github.com/google/visqol/archive/refs/tags/v3.3.3.tar.gz"
     cd /tmp
     tar -xvf visqol.tar.gz
     rm visqol.tar.gz
@@ -142,8 +142,8 @@ install_tesseract() {
     ## Install tesseract
     ## Building tesseract ST for better performance, check https://tesseract-ocr.github.io/tessdoc/Compiling-%E2%80%93-GitInstallation.html#release-builds-for-mass-production
     curl --output "/tmp/tesseract.tar.gz" \
-            --continue-at - \
-            --location "https://github.com/tesseract-ocr/tesseract/archive/refs/tags/4.1.3.tar.gz"
+        --continue-at - \
+        --location "https://github.com/tesseract-ocr/tesseract/archive/refs/tags/4.1.3.tar.gz"
     cd /tmp
     tar -xvf tesseract.tar.gz
     rm tesseract.tar.gz
@@ -158,8 +158,8 @@ install_tesseract() {
     rm -rf tesseract-4.1.3
     cd $SELF_PATH
     curl --output "/usr/local/share/tessdata/eng.traineddata" \
-            --continue-at - \
-            --location "https://github.com/tesseract-ocr/tessdata/raw/main/eng.traineddata"
+        --continue-at - \
+        --location "https://github.com/tesseract-ocr/tessdata/raw/main/eng.traineddata"
 }
 
 install_python_dependencies() {
@@ -169,7 +169,7 @@ install_python_dependencies() {
 
 install_node_dependencies_and_build() {
     ## Install node dependencies
-    npm --prefix /opt/openvidu-loadtest/browser-emulator install 
+    npm --prefix /opt/openvidu-loadtest/browser-emulator install
     npm --prefix /opt/openvidu-loadtest/browser-emulator run build
 }
 
@@ -186,6 +186,8 @@ wait
 
 # Needs sudo so it works in crontab
 sudo ldconfig
+
+# TODO: define GCP alternative
 pip3 install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz
 
 # Pull images used by browser-emulator for faster initialization time
@@ -203,6 +205,7 @@ chown -R ubuntu:ubuntu /opt/openvidu-loadtest/
 echo '@reboot cd /opt/openvidu-loadtest/browser-emulator && npm run start:prod > /var/log/crontab.log 2>&1' 2>&1 | crontab -u ubuntu -
 
 # sending the finish call
+# TODO: define GCP alternative
 /usr/local/bin/cfn-signal -e 0 --stack ${AWS_STACK} --resource BrowserInstance --region ${AWS_REGION}
 
 echo "Instance is ready"
