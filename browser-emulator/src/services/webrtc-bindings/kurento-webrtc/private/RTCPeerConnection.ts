@@ -4,6 +4,7 @@
  */
 
 import * as KurentoClient from './KurentoClient';
+import { getComplexType } from './KurentoClient';
 
 import { Event } from './Event';
 import { MediaStream } from './MediaStream';
@@ -85,7 +86,7 @@ export class RTCPeerConnection extends EventEmitter {
 	}
 
 	private onKurentoIceCandidate(event: any): void {
-		const kurentoCandidate = new KurentoClient.getComplexType('IceCandidate')(event.candidate);
+		const kurentoCandidate = getComplexType('IceCandidate')(event.candidate);
 
 		// https://www.w3.org/TR/webrtc/#dom-rtcpeerconnectioniceevent
 		const iceEvent = new RTCPeerConnectionIceEvent('icecandidate', {
@@ -146,7 +147,7 @@ export class RTCPeerConnection extends EventEmitter {
 			throw new Error("BUG: Kurento WebRtcEndpoint doesn't exist");
 		}
 
-		const kurentoCandidate = new KurentoClient.getComplexType('IceCandidate')(candidate);
+		const kurentoCandidate = getComplexType('IceCandidate')(candidate);
 		await this.kurentoWebRtcEp.addIceCandidate(kurentoCandidate);
 	}
 
@@ -211,7 +212,7 @@ export class RTCPeerConnection extends EventEmitter {
 			sdpOffer = await this.kurentoWebRtcEp.generateOffer();
 		} else {
 			sdpOffer = await this.kurentoWebRtcEp.generateOffer(
-				new KurentoClient.getComplexType('OfferOptions')({
+				getComplexType('IceCandidate')({
 					// FIXME: These names are misleading! The API is wrong, and
 					// they should be just "offerAudio", "offerVideo".
 					offerToReceiveAudio: offerAudio,
@@ -240,7 +241,7 @@ export class RTCPeerConnection extends EventEmitter {
 				try {
 					kurentoStatsReport = await this.kurentoWebRtcEp.getStats(kind.toUpperCase());
 				} catch (error) {
-					console.error('Error getting stats ', error)
+					console.error('Error getting stats ', error);
 					throw error;
 				}
 

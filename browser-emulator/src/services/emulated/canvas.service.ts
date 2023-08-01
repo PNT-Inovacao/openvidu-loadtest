@@ -1,8 +1,6 @@
-const {
-	RTCVideoSource,
-	RTCAudioSource,
-	rgbaToI420,
-} = require('wrtc').nonstandard;
+import { nonstandard } from 'wrtc';
+const { RTCVideoSource, RTCAudioSource, rgbaToI420 } = nonstandard;
+
 import { Canvas, createCanvas, Image, loadImage } from 'canvas';
 import { MediaStreamTracksResponse } from '../../types/emulate-webrtc.type';
 import { IEmulateWebrtc } from './emulate-webrtc.interface';
@@ -21,16 +19,14 @@ export class CanvasService implements IEmulateWebrtc {
 	private MIN = 0;
 	private canvasInterval: NodeJS.Timer;
 	private CANVAS_MAX_HEIGHT: number;
+	'wrtc';
 	private CANVAS_MAX_WIDTH: number;
 
 	constructor() {
 		this.initializeVideoCanvas();
 	}
 
-	async createMediaStreamTracks(
-		video: boolean,
-		audio: boolean
-	): Promise<MediaStreamTracksResponse> {
+	async createMediaStreamTracks(video: boolean, audio: boolean): Promise<MediaStreamTracksResponse> {
 		let response: MediaStreamTracksResponse = {
 			videoTrack: null,
 			audioTrack: null,
@@ -77,10 +73,7 @@ export class CanvasService implements IEmulateWebrtc {
 		const options = {
 			channelCount: 1,
 			sampleRate: 30000,
-			frequency: Math.floor(
-				Math.random() * (this.MAX_FREQUENCY - this.MIN_FREQUENCY) +
-					this.MIN_FREQUENCY
-			),
+			frequency: Math.floor(Math.random() * (this.MAX_FREQUENCY - this.MIN_FREQUENCY) + this.MIN_FREQUENCY),
 			time: 0,
 		};
 		const bitsPerSample = 16;
@@ -102,10 +95,7 @@ export class CanvasService implements IEmulateWebrtc {
 			for (let i = 0; i < numberOfFrames; i++) {
 				options.time += secondsPerSample;
 				for (let j = 0; j < options.channelCount; j++) {
-					samples[i * options.channelCount + j] =
-						Math.sin(
-							2 * Math.PI * options.frequency * options.time
-						) * maxValue;
+					samples[i * options.channelCount + j] = Math.sin(2 * Math.PI * options.frequency * options.time) * maxValue;
 				}
 			}
 			audioSource.onData(data);
@@ -120,18 +110,11 @@ export class CanvasService implements IEmulateWebrtc {
 	private async startVideoCanvasInterval(timeoutMs: number = 30) {
 		// Max 30 fps
 		timeoutMs = timeoutMs < 30 ? 30 : timeoutMs;
-		this.context.fillStyle =
-			'#' + Math.floor(Math.random() * 16777215).toString(16);
+		this.context.fillStyle = '#' + Math.floor(Math.random() * 16777215).toString(16);
 
 		this.canvasInterval = setInterval(() => {
-			const x = Math.floor(
-				Math.random() * (this.CANVAS_MAX_WIDTH - this.MIN + 1) +
-					this.MIN
-			);
-			const y = Math.floor(
-				Math.random() * (this.CANVAS_MAX_HEIGHT - this.MIN + 1) +
-					this.MIN
-			);
+			const x = Math.floor(Math.random() * (this.CANVAS_MAX_WIDTH - this.MIN + 1) + this.MIN);
+			const y = Math.floor(Math.random() * (this.CANVAS_MAX_HEIGHT - this.MIN + 1) + this.MIN);
 
 			this.context.save();
 			this.context.fillRect(0, 0, this.WIDTH, this.HEIGHT);
@@ -141,12 +124,7 @@ export class CanvasService implements IEmulateWebrtc {
 
 			this.context.restore();
 
-			const rgbaFrame = this.context.getImageData(
-				0,
-				0,
-				this.WIDTH,
-				this.HEIGHT
-			);
+			const rgbaFrame = this.context.getImageData(0, 0, this.WIDTH, this.HEIGHT);
 			const i420Frame = {
 				width: this.WIDTH,
 				height: this.HEIGHT,

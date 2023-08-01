@@ -10,6 +10,9 @@
     // This helps with type-checking the Kurento JS client files.
     "declaration": true,
     "declarationMap": true,
+    "module": "CommonJS", // or any other ECMAScript module version you want to target
+    "target": "es2021", // or any other ECMAScript version you are using
+    "allowSyntheticDefaultImports": true,
 
     // Linter Checks (https://www.typescriptlang.org/tsconfig#Additional_Checks_6176)
     // These help with writing better code. Enable as many as possible.
@@ -33,11 +36,12 @@
 
     // FIXME - Code needs to be fixed, then these should be removed.
     "strict": false,
-    "esModuleInterop": false,
+    "skipLibCheck": true,
+    "esModuleInterop": false
   },
 
   // Included Files (https://www.typescriptlang.org/tsconfig#include)
-  "include": ["./src/**/*.ts"],
+  "include": ["./src/**/*.ts"]
 
   // Excluded Files (https://www.typescriptlang.org/tsconfig#exclude)
   // Filters out stuff that has been previously included in "include".

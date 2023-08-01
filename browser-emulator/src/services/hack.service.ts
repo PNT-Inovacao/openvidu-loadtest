@@ -1,22 +1,22 @@
 (<any>globalThis.window) = { console: console };
-import OpenVidu = require('openvidu-browser/lib/OpenVidu/OpenVidu');
-import Publisher = require('openvidu-browser/lib/OpenVidu/Publisher');
+import OpenVidu from 'openvidu-browser/lib/OpenVidu/OpenVidu';
+import Publisher from 'openvidu-browser/lib/OpenVidu/Publisher';
 import { PublisherOverride } from './webrtc-bindings/openvidu-browser/Publisher';
 
-const WebSocket = require('ws');
-const fetch = require('node-fetch');
-const LocalStorage = require('node-localstorage').LocalStorage;
-import platform = require('platform');
+import WebSocket from 'ws';
+import fetch from 'node-fetch';
+import { LocalStorage } from 'node-localstorage';
+import platform from 'platform';
 import { EMULATED_USER_TYPE } from '../config';
 import { EmulatedUserType } from '../types/config.type';
 
-const RTCPeerConnectionWRTC = require('wrtc').RTCPeerConnection;
-const RTCIceCandidateWRTC = require('wrtc').RTCIceCandidate;
-const RTCSessionDescriptionWRTC = require('wrtc').RTCSessionDescription;
-const mediaDevicesWRTC = require('wrtc').mediaDevices;
-const MediaStreamWRTC = require('wrtc').MediaStream;
-const MediaStreamTrackWRTC = require('wrtc').MediaStreamTrack;
-const getUserMediaWRTC = require('wrtc').getUserMedia;
+import { RTCPeerConnection as RTCPeerConnectionWRTC } from 'wrtc';
+import { RTCIceCandidate as RTCIceCandidateWRTC } from 'wrtc';
+import { RTCSessionDescription as RTCSessionDescriptionWRTC } from 'wrtc';
+import { mediaDevices as mediaDevicesWRTC } from 'wrtc';
+import { MediaStream as MediaStreamWRTC } from 'wrtc';
+import { MediaStreamTrack as MediaStreamTrackWRTC } from 'wrtc';
+import { getUserMedia as getUserMediaWRTC } from 'wrtc';
 
 import * as KurentoWebRTC from './webrtc-bindings/kurento-webrtc/KurentoWebRTC';
 
@@ -28,7 +28,7 @@ export class HackService {
 		(<any>globalThis.document) = {};
 		(<any>globalThis.HTMLElement) = null;
 		globalThis.localStorage = new LocalStorage('./');
-		globalThis.fetch = fetch;
+		globalThis.fetch = fetch as any;
 	}
 
 	async webrtc(): Promise<void> {
@@ -43,8 +43,7 @@ export class HackService {
 			globalObject.MediaStreamTrack = KurentoWebRTC.MediaStreamTrack;
 			globalObject.RTCIceCandidate = KurentoWebRTC.RTCIceCandidate;
 			globalObject.RTCPeerConnection = KurentoWebRTC.RTCPeerConnection;
-			globalObject.RTCSessionDescription =
-				KurentoWebRTC.RTCSessionDescription;
+			globalObject.RTCSessionDescription = KurentoWebRTC.RTCSessionDescription;
 		} else {
 			// Overriding WebRTC API using node-wrtc library with the aim of provide it to openvidu-browser
 			// For EmulatedUserType.KMS, this is not necessary due to KMS will implement the WebRTC API itself.
@@ -64,7 +63,7 @@ export class HackService {
 	}
 
 	websocket() {
-		globalThis.WebSocket = WebSocket;
+		globalThis.WebSocket = WebSocket as any;
 	}
 
 	openviduBrowser() {
@@ -76,13 +75,12 @@ export class HackService {
 		})(OpenVidu.OpenVidu);
 
 		Publisher.Publisher = ((original) => {
-			Publisher.Publisher.prototype.initializeVideoReference =
-				PublisherOverride.prototype.initializeVideoReference;
-			Publisher.Publisher.prototype.getVideoDimensions =
-				PublisherOverride.prototype.getVideoDimensions;
+			Publisher.Publisher.prototype.initializeVideoReference = PublisherOverride.prototype.initializeVideoReference;
+			Publisher.Publisher.prototype.getVideoDimensions = PublisherOverride.prototype.getVideoDimensions;
 			return PublisherOverride;
 		})(Publisher.Publisher);
 	}
+	getUserMedia;
 
 	allowSelfSignedCertificate() {
 		// Allowed self signed certificate

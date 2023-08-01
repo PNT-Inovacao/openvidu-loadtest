@@ -1,4 +1,4 @@
-var btoa = require('btoa');
+import btoa from 'btoa';
 import axios, { AxiosRequestConfig } from 'axios';
 import * as https from 'https';
 import { RecordingLayoutMode, RecordingMode, RecordingOutputMode, TestProperties } from '../types/api-rest.type';

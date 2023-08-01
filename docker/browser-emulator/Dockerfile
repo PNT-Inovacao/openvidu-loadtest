@@ -163,6 +163,7 @@ RUN curl --output "/usr/local/share/tessdata/eng.traineddata" \
 
 # TODO: fix build in image process
 COPY browser-emulator/ .
+RUN npm run build
 
 EXPOSE 5000
 EXPOSE 5001

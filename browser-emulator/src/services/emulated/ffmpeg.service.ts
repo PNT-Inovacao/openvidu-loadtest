@@ -1,7 +1,7 @@
-const ffmpeg = require('fluent-ffmpeg');
-const chunker = require('stream-chunker');
+import ffmpeg from 'fluent-ffmpeg';
+import chunker from 'stream-chunker';
 import { StreamOutput } from 'fluent-ffmpeg-multistream';
-import wrtc = require('wrtc');
+import wrtc from 'wrtc';
 import { MediaStreamTracksResponse } from '../../types/emulate-webrtc.type';
 import { IEmulateWebrtc } from './emulate-webrtc.interface';
 
@@ -23,10 +23,7 @@ export class FfmpegService implements IEmulateWebrtc {
 
 	constructor() {}
 
-	async createMediaStreamTracks(
-		video: boolean,
-		audio: boolean
-	): Promise<MediaStreamTracksResponse> {
+	async createMediaStreamTracks(video: boolean, audio: boolean): Promise<MediaStreamTracksResponse> {
 		if (!this.mediaStramTracksCreated) {
 			this.videoTrack = video;
 			this.audioTrack = audio;
@@ -45,16 +42,11 @@ export class FfmpegService implements IEmulateWebrtc {
 		this.mediaStramTracksCreated = false;
 	}
 
-	private async createMediaStreamTracksFromVideoFile(
-		video: boolean,
-		audio: boolean
-	) {
+	private async createMediaStreamTracksFromVideoFile(video: boolean, audio: boolean) {
 		let videoOutput = null;
 		let audioOutput = null;
 
-		const command = ffmpeg()
-			.input(`${process.env.PWD}/src/assets/mediafiles/video.mkv`)
-			.inputOptions(['-stream_loop -1', '-r 1']);
+		const command = ffmpeg().input(`${process.env.PWD}/src/assets/mediafiles/video.mkv`).inputOptions(['-stream_loop -1', '-r 1']);
 
 		if (video) {
 			videoOutput = this.createVideoOutput();
@@ -116,12 +108,7 @@ export class FfmpegService implements IEmulateWebrtc {
 		const ffmpegOptions = ['-f s16le', '-ar 48k', '-ac 1'];
 		sourceStream.on('data', (chunk) => {
 			const data = {
-				samples: new Int16Array(
-					chunk.buffer.slice(
-						chunk.byteOffset,
-						chunk.byteOffset + chunk.length
-					)
-				),
+				samples: new Int16Array(chunk.buffer.slice(chunk.byteOffset, chunk.byteOffset + chunk.length)),
 				sampleRate,
 			};
 

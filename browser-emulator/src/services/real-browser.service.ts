@@ -1,7 +1,8 @@
-import fs = require('fs');
+import * as fs from 'fs';
+
 import { By, Capabilities, until, WebDriver, logging, Browser } from 'selenium-webdriver';
-import chrome = require('selenium-webdriver/chrome');
-import firefox = require('selenium-webdriver/firefox');
+import chrome from 'selenium-webdriver/chrome';
+import firefox from 'selenium-webdriver/firefox';
 import { LoadTestPostRequest, TestProperties } from '../types/api-rest.type';
 import { OpenViduRole } from '../types/openvidu.type';
 import { ErrorGenerator } from '../utils/error-generator';
@@ -20,7 +21,7 @@ export class RealBrowserService {
 	private chromeCapabilities = Capabilities.chrome();
 	private firefoxOptions = new firefox.Options();
 	private firefoxCapabilities = Capabilities.firefox();
-	private driverMap: Map<string, {driver: WebDriver, sessionName: string, connectionRole: OpenViduRole}> = new Map();
+	private driverMap: Map<string, { driver: WebDriver; sessionName: string; connectionRole: OpenViduRole }> = new Map();
 	private readonly VIDEO_FILE_LOCATION = `${process.env.PWD}/src/assets/mediafiles/fakevideo`;
 	private readonly AUDIO_FILE_LOCATION = `${process.env.PWD}/src/assets/mediafiles/fakeaudio.wav`;
 	private keepAliveIntervals = new Map();
@@ -31,21 +32,14 @@ export class RealBrowserService {
 	constructor(private errorGenerator: ErrorGenerator = new ErrorGenerator()) {
 		const prefs = new logging.Preferences();
 		prefs.setLevel(logging.Type.BROWSER, logging.Level.ALL);
-		if (process.env.REAL_DRIVER === "firefox") {
+		if (process.env.REAL_DRIVER === 'firefox') {
 			this.firefoxCapabilities.setLoggingPrefs(prefs);
 			this.firefoxCapabilities.setAcceptInsecureCerts(true);
-			this.firefoxOptions
-				.setPreference("permissions.default.microphone", 1)
-				.setPreference("permissions.default.camera", 1);
+			this.firefoxOptions.setPreference('permissions.default.microphone', 1).setPreference('permissions.default.camera', 1);
 		} else {
 			this.chromeCapabilities.setLoggingPrefs(prefs);
 			this.chromeCapabilities.setAcceptInsecureCerts(true);
-			this.chromeOptions.addArguments(
-				'--disable-dev-shm-usage',
-				'--use-fake-ui-for-media-stream',
-				"--no-sandbox",
-				"--disable-gpu"
-			);
+			this.chromeOptions.addArguments('--disable-dev-shm-usage', '--use-fake-ui-for-media-stream', '--no-sandbox', '--disable-gpu');
 		}
 		if (process.env.IS_DOCKER_CONTAINER === 'true') {
 			this.chromeOptions.addArguments(`--unsafely-treat-insecure-origin-as-secure=http://${DOCKER_NAME}`);
@@ -53,7 +47,7 @@ export class RealBrowserService {
 	}
 
 	public async startSelenium(properties: TestProperties): Promise<void> {
-		const videoPath = `${this.VIDEO_FILE_LOCATION}_${properties.frameRate}fps_${properties.resolution}.y4m`
+		const videoPath = `${this.VIDEO_FILE_LOCATION}_${properties.frameRate}fps_${properties.resolution}.y4m`;
 		this.seleniumService = await SeleniumService.getInstance(videoPath, this.AUDIO_FILE_LOCATION);
 	}
 
@@ -72,31 +66,34 @@ export class RealBrowserService {
 	}
 
 	async deleteStreamManagerWithRole(role: OpenViduRole): Promise<void> {
-		console.log("Current number of total users in worker: " + this.driverMap.size);
-		console.log("Deleting all " + role.toString());
-		const driversToDelete: {key: string, value: {
-			driver: WebDriver;
-			sessionName: string;
-			connectionRole: OpenViduRole;
-		} }[] = [];
+		console.log('Current number of total users in worker: ' + this.driverMap.size);
+		console.log('Deleting all ' + role.toString());
+		const driversToDelete: {
+			key: string;
+			value: {
+				driver: WebDriver;
+				sessionName: string;
+				connectionRole: OpenViduRole;
+			};
+		}[] = [];
 		const promisesToResolve: Promise<void>[] = [];
 		const recordingPromises: Promise<void>[] = [];
 		this.driverMap.forEach((value, key) => {
 			if (value.connectionRole === role) {
-				driversToDelete.push({key, value});
-				console.log("Driver to delete: " + key + " with session: " + value.sessionName)
+				driversToDelete.push({ key, value });
+				console.log('Driver to delete: ' + key + ' with session: ' + value.sessionName);
 
 				recordingPromises.push(this.saveQoERecordings(key));
-				this.deleteConnection(value.sessionName, key, value.connectionRole)
+				this.deleteConnection(value.sessionName, key, value.connectionRole);
 			}
 		});
-		console.log("Number of users to delete: " + driversToDelete.length)
+		console.log('Number of users to delete: ' + driversToDelete.length);
 		if (recordingPromises.length > 0) {
-			console.log("Number of QoE recordings to save: " + recordingPromises.length)
-			await Promise.all(recordingPromises)
-			console.log("QoE recordings saved")
+			console.log('Number of QoE recordings to save: ' + recordingPromises.length);
+			await Promise.all(recordingPromises);
+			console.log('QoE recordings saved');
 		}
-		console.log("Clearing keep alive intervals")
+		console.log('Clearing keep alive intervals');
 		driversToDelete.forEach((item) => {
 			const keepAliveInterval = this.keepAliveIntervals.get(item.key);
 			if (!!keepAliveInterval) {
@@ -113,30 +110,36 @@ export class RealBrowserService {
 		}
 	}
 
-	private async quitDriver(key: string, value: {
-		driver: WebDriver;
-		sessionName: string;
-		connectionRole: OpenViduRole;
-	}) {
-		console.log("Quitting driver: " + key + " with session: " + value.sessionName)
+	private async quitDriver(
+		key: string,
+		value: {
+			driver: WebDriver;
+			sessionName: string;
+			connectionRole: OpenViduRole;
+		}
+	) {
+		console.log('Quitting driver: ' + key + ' with session: ' + value.sessionName);
 		try {
-			await value.driver.quit()
-			console.log("Driver quit: " + key + " with session: " + value.sessionName + " successfully")
+			await value.driver.quit();
+			console.log('Driver quit: ' + key + ' with session: ' + value.sessionName + ' successfully');
 		} catch (error) {
-			console.error("Error quitting driver: " + key + " with session: " + value.sessionName, error)
+			console.error('Error quitting driver: ' + key + ' with session: ' + value.sessionName, error);
 		}
 	}
 
 	async clean(): Promise<void> {
-		console.log("Cleaning real browsers")
+		console.log('Cleaning real browsers');
 		this.stopRecording();
-		await Promise.all([this.deleteStreamManagerWithRole(OpenViduRole.PUBLISHER), this.deleteStreamManagerWithRole(OpenViduRole.SUBSCRIBER)]);
-		console.log("Real browsers cleaned")
+		await Promise.all([
+			this.deleteStreamManagerWithRole(OpenViduRole.PUBLISHER),
+			this.deleteStreamManagerWithRole(OpenViduRole.SUBSCRIBER),
+		]);
+		console.log('Real browsers cleaned');
 	}
 
 	stopRecording() {
 		if (!!this.recordingScript) {
-			console.log("Stopping general recording")
+			console.log('Stopping general recording');
 			stopDetached(this.recordingScript.pid);
 		}
 	}
@@ -148,7 +151,11 @@ export class RealBrowserService {
 		timeout: number = 1000
 	): Promise<string> {
 		const properties = request.properties;
-		if (!this.existMediaFiles(properties.resolution, properties.frameRate) && !process.env.IS_DOCKER_CONTAINER && (APPLICATION_MODE === ApplicationMode.PROD)) {
+		if (
+			!this.existMediaFiles(properties.resolution, properties.frameRate) &&
+			!process.env.IS_DOCKER_CONTAINER &&
+			APPLICATION_MODE === ApplicationMode.PROD
+		) {
 			return Promise.reject({
 				message: 'WARNING! Media files not found. fakevideo.y4m and fakeaudio.wav. Have you run downloaded the mediafiles?',
 			});
@@ -163,15 +170,15 @@ export class RealBrowserService {
 				try {
 					const webappUrl = this.generateWebappUrl(request.token, request.properties);
 					console.log(webappUrl);
-					let driver: WebDriver; 
-					if (process.env.REAL_DRIVER === "firefox") {
+					let driver: WebDriver;
+					if (process.env.REAL_DRIVER === 'firefox') {
 						driver = await this.seleniumService.getFirefoxDriver(this.firefoxCapabilities, this.firefoxOptions);
 					} else {
 						driver = await this.seleniumService.getChromeDriver(this.chromeCapabilities, this.chromeOptions);
 					}
 					driverId = (await driver.getSession()).getId();
-					this.driverMap.set(driverId, {driver, sessionName: properties.sessionName, connectionRole: properties.role});
-					await driver.manage().setTimeouts({script: 1800000});
+					this.driverMap.set(driverId, { driver, sessionName: properties.sessionName, connectionRole: properties.role });
+					await driver.manage().setTimeouts({ script: 1800000 });
 					await driver.get(webappUrl);
 
 					if (!!storageNameObj && !!storageValueObj) {
@@ -188,20 +195,20 @@ export class RealBrowserService {
 							storageValueObj
 						);
 					}
-					
+
 					await driver.manage().window().maximize();
 
 					const isRecording = !!properties.recording && !properties.headless;
 					if (isRecording && !this.recordingScript) {
 						const ffmpegCommand = [
-							"ffmpeg -hide_banner -loglevel warning -nostdin -y",
+							'ffmpeg -hide_banner -loglevel warning -nostdin -y',
 							` -video_size 1920x1080 -framerate ${properties.frameRate} -f x11grab -i :10`,
 							` -f pulse -i 0 `,
 							`${process.env.PWD}/recordings/chrome/session_${Date.now()}.mp4`,
-						].join("");
+						].join('');
 						this.recordingScript = await runScript(ffmpegCommand, {
-							detached: true
-						})
+							detached: true,
+						});
 					}
 					// Wait until connection has been created
 					await driver.wait(until.elementsLocated(By.id('local-connection-created')), this.BROWSER_WAIT_TIMEOUT_MS);
@@ -215,10 +222,10 @@ export class RealBrowserService {
 						await driver.wait(until.elementsLocated(By.id('subscriber-need-to-be-unmuted')), this.BROWSER_WAIT_TIMEOUT_MS);
 						await driver.sleep(1000);
 						const buttons = await driver.findElements(By.id('subscriber-need-to-be-unmuted'));
-						buttons.forEach(button => button.click());
+						buttons.forEach((button) => button.click());
 					}
 					console.log('Browser works as expected');
-					const publisherVideos = await driver.findElements(By.css("[id^=\"remote-video-str\"]"))
+					const publisherVideos = await driver.findElements(By.css('[id^="remote-video-str"]'));
 					this.totalPublishers = currentPublishers + publisherVideos.length;
 					// Workaround, currently browsers timeout after 1h unless we send an HTTP request to Selenium
 					// set interval each minute to send a request to Selenium
@@ -338,10 +345,10 @@ export class RealBrowserService {
 
 	private async saveQoERecordings(driverId: string) {
 		if (!!process.env.QOE_ANALYSIS && !!driverId) {
-			console.log("Saving QoE Recordings for driver " + driverId);
+			console.log('Saving QoE Recordings for driver ' + driverId);
 			const driver = this.driverMap.get(driverId).driver;
 			if (!!driver) {
-				console.log("Executing getRecordings for driver " + driverId);
+				console.log('Executing getRecordings for driver ' + driverId);
 				const fileNamePrefix = `QOE`;
 				try {
 					await driver.executeAsyncScript(`
@@ -358,10 +365,10 @@ export class RealBrowserService {
 							callback()
 						}
 					`);
-					console.log("QoE Recordings saved for driver " + driverId);
+					console.log('QoE Recordings saved for driver ' + driverId);
 					await this.printBrowserLogs(driverId);
 				} catch (error) {
-					console.log("Error saving QoE Recordings for driver " + driverId);
+					console.log('Error saving QoE Recordings for driver ' + driverId);
 					console.log(error);
 					await this.printBrowserLogs(driverId);
 				}
@@ -371,13 +378,13 @@ export class RealBrowserService {
 	}
 
 	private async printBrowserLogs(driverId: string) {
-		if (process.env.REAL_DRIVER !== "firefox") {
-			const entries = await this.driverMap.get(driverId).driver.manage().logs().get(logging.Type.BROWSER)
+		if (process.env.REAL_DRIVER !== 'firefox') {
+			const entries = await this.driverMap.get(driverId).driver.manage().logs().get(logging.Type.BROWSER);
 			if (!!entries) {
 				function formatTime(s: number): string {
 					const dtFormat = new Intl.DateTimeFormat('en-GB', {
 						timeStyle: 'medium',
-						timeZone: 'UTC'
+						timeZone: 'UTC',
 					});
 
 					return dtFormat.format(new Date(s * 1e3));

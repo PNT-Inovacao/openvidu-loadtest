@@ -1,4 +1,4 @@
-import fs = require('fs');
+import * as fs from 'fs';
 import * as express from 'express';
 import { Request, Response } from 'express';
 import { BrowserVideoRequest, CustomBrowserVideoRequest, InitializePostRequest } from '../types/api-rest.type';
@@ -49,12 +49,12 @@ app.post('/initialize', async (req: Request, res: Response) => {
 
 		console.log('Initialize browser-emulator');
 
-		const promises = []
+		const promises = [];
 		if (isProdMode) {
 			if (!!request.browserVideo) {
 				promises.push(downloadMediaFilesAndStartSeleniumService(request.browserVideo));
 			}
-			
+
 			if (!elasticSearchService.isElasticSearchRunning()) {
 				process.env.ELASTICSEARCH_HOSTNAME = request.elasticSearchHost;
 				process.env.ELASTICSEARCH_USERNAME = request.elasticSearchUserName;
@@ -65,7 +65,6 @@ app.post('/initialize', async (req: Request, res: Response) => {
 				promises.push(elasticSearchService.initialize(process.env.ELASTICSEARCH_INDEX));
 				promises.push(launchMetricBeat());
 			}
-
 		}
 		const fileServicePromise = new Promise((resolve, reject) => {
 			if (!!request.minioHost && !!request.minioAccessKey && !!request.minioSecretKey) {
@@ -118,10 +117,7 @@ async function launchMetricBeat() {
 }
 
 async function downloadMediaFilesAndStartSeleniumService(videoType: BrowserVideoRequest): Promise<SeleniumService> {
-	const fileNames = await Promise.all([
-		downloadBrowserMediaFiles(videoType),
-		downloadEmulatedFiles()
-	])
+	const fileNames = await Promise.all([downloadBrowserMediaFiles(videoType), downloadEmulatedFiles()]);
 	return SeleniumService.getInstance(fileNames[0][0], fileNames[0][1]);
 }
 
@@ -129,22 +125,28 @@ async function downloadBrowserMediaFiles(videoType: BrowserVideoRequest): Promis
 	if (videoType.videoInfo === undefined) {
 		throw new Error('Missing video info in video request');
 	}
-	const videoInfo = videoType.videoInfo
-	const videoFile = `fakevideo_${videoInfo.fps}fps_${videoInfo.width}x${videoInfo.height}.y4m`
-	const videoUrl = videoType.videoType === "custom" ? videoType.customVideo.video.url : `https://openvidu-loadtest-mediafiles.s3.us-east-1.amazonaws.com/${videoType.videoType}_${videoInfo.height}p_${videoInfo.fps}fps.y4m`
-	const audioFile = `fakeaudio.wav`
-	const audioUrl = videoType.videoType === "custom" ? videoType.customVideo.audioUrl : `https://openvidu-loadtest-mediafiles.s3.us-east-1.amazonaws.com/${videoType.videoType}.wav`
-	const promises = [
-			downloadFile(videoFile, videoUrl, MEDIAFILES_DIR),
-			downloadFile(audioFile, audioUrl, MEDIAFILES_DIR)
-		]
-	return Promise.all(promises)
+	const videoInfo = videoType.videoInfo;
+	const videoFile = `fakevideo_${videoInfo.fps}fps_${videoInfo.width}x${videoInfo.height}.y4m`;
+	const videoUrl =
+		videoType.videoType === 'custom'
+			? videoType.customVideo.video.url
+			: `https://openvidu-loadtest-mediafiles.s3.us-east-1.amazonaws.com/${videoType.videoType}_${videoInfo.height}p_${videoInfo.fps}fps.y4m`;
+	const audioFile = `fakeaudio.wav`;
+	const audioUrl =
+		videoType.videoType === 'custom'
+			? videoType.customVideo.audioUrl
+			: `https://openvidu-loadtest-mediafiles.s3.us-east-1.amazonaws.com/${videoType.videoType}.wav`;
+	const promises = [downloadFile(videoFile, videoUrl, MEDIAFILES_DIR), downloadFile(audioFile, audioUrl, MEDIAFILES_DIR)];
+	return Promise.all(promises);
 }
 
 async function downloadEmulatedFiles(): Promise<string[]> {
 	return Promise.all([
-		downloadFile("video_640x480.mkv", "https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_640x480.mkv", MEDIAFILES_DIR).then(() => "video_640x480.mkv"),
-		downloadFile("video_1280x720.mkv", "https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_1280x720.mkv", MEDIAFILES_DIR).then(() => "video_1280x720.mkv")
+		downloadFile('video_640x480.mkv', 'https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_640x480.mkv', MEDIAFILES_DIR).then(
+			() => 'video_640x480.mkv'
+		),
+		downloadFile('video_1280x720.mkv', 'https://s3.eu-west-1.amazonaws.com/public.openvidu.io/bbb_1280x720.mkv', MEDIAFILES_DIR).then(
+			() => 'video_1280x720.mkv'
+		),
 	]);
 }
-

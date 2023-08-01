@@ -5,7 +5,7 @@ import { WsService } from '../services/ws.service';
 import { JSONStatsResponse } from '../types/api-rest.type';
 
 // DEBUG: Print full objects (only uncomment for debug sessions during development)
-// require("util").inspect.defaultOptions.depth = null;
+//from "util").inspect.defaultOptions.depth = null;
 
 export const app = express.Router({
 	strict: true,
@@ -42,7 +42,7 @@ app.post('/events/errors', (req: Request, res: Response) => {
 	try {
 		const message: string = JSON.stringify(req.body);
 
-		console.error("Error received from browser: ");
+		console.error('Error received from browser: ');
 		console.error(message);
 
 		return res.status(200).send();

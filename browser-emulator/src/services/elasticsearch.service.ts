@@ -3,7 +3,7 @@ import { Index } from '@elastic/elasticsearch/api/requestParams';
 import { APPLICATION_MODE } from '../config';
 import { JSONQoEInfo, JSONStatsResponse, JSONStreamsInfo } from '../types/api-rest.type';
 import { ApplicationMode } from '../types/config.type';
-import fs = require('fs');
+import fs from 'fs';
 
 export class ElasticSearchService {
 	indexName: string = '';
@@ -14,7 +14,7 @@ export class ElasticSearchService {
 	private mappings = JSON.parse(fs.readFileSync(`${process.env.PWD}/src/services/index-mappings.json`, 'utf8'));
 	protected static instance: ElasticSearchService;
 
-	private constructor() { }
+	private constructor() {}
 
 	static getInstance(): ElasticSearchService {
 		if (!ElasticSearchService.instance) {
@@ -54,11 +54,12 @@ export class ElasticSearchService {
 						// Create index if it doesn't exist
 						let exists = await this.client.indices.exists({ index: this.indexName });
 						if (!exists.body) {
-							await this.client.indices.create({ 
+							await this.client.indices.create({
 								index: this.indexName,
 								body: {
-									mappings: this.mappings
-								} });
+									mappings: this.mappings,
+								},
+							});
 						}
 					}
 				}
@@ -91,8 +92,8 @@ export class ElasticSearchService {
 	async sendBulkJsons(jsons: JSONStatsResponse[] | JSONStreamsInfo[] | JSONQoEInfo[]) {
 		if (this.isElasticSearchRunning() && APPLICATION_MODE === ApplicationMode.PROD) {
 			try {
-				const operations = jsons.flatMap((json) => [{ index: { _index: this.indexName } }, json])
-				const bulkResponse = await this.client.bulk({ refresh: "true", body: operations });
+				const operations = jsons.flatMap((json) => [{ index: { _index: this.indexName } }, json]);
+				const bulkResponse = await this.client.bulk({ refresh: 'true', body: operations });
 				if (bulkResponse.body.errors) {
 					throw new Error(bulkResponse.body.items[0].index.error.reason);
 				}
@@ -130,10 +131,12 @@ export class ElasticSearchService {
 	private async createElasticSearchIndex(): Promise<void> {
 		// await this.deleteIndexIfExist(index);
 		const index = this.generateNewIndexName();
-		await this.client.indices.create({ index,
+		await this.client.indices.create({
+			index,
 			body: {
-				mappings: this.mappings
-			} });
+				mappings: this.mappings,
+			},
+		});
 	}
 
 	// private async deleteIndexIfExist(index: string): Promise<void> {
@@ -149,8 +152,9 @@ export class ElasticSearchService {
 
 	private generateNewIndexName(): string {
 		const date = new Date();
-		const timestamp = `${date.getHours()}-${date.getMinutes()}-${date.getSeconds()}-${date.getDate()}-${date.getMonth() + 1
-			}-${date.getFullYear()}`;
+		const timestamp = `${date.getHours()}-${date.getMinutes()}-${date.getSeconds()}-${date.getDate()}-${
+			date.getMonth() + 1
+		}-${date.getFullYear()}`;
 		this.indexName = this.LOADTEST_INDEX + '-' + timestamp + '-' + new Date().getTime();
 		return this.indexName;
 	}
@@ -162,25 +166,25 @@ export class ElasticSearchService {
 				body: {
 					query: {
 						exists: {
-							field: 'new_participant_id'
-						}
+							field: 'new_participant_id',
+						},
 					},
-					size: 10000
-				}
-			})
-			return result.body.hits.hits.map(hit => {
+					size: 10000,
+				},
+			});
+			return result.body.hits.hits.map((hit) => {
 				const json: JSONStreamsInfo = {
-					"@timestamp": hit._source["@timestamp"],
-					new_participant_id: hit._source["new_participant_id"],
-					new_participant_session: hit._source["new_participant_session"],
-					node_role: hit._source["node_role"],
-					streams: hit._source["streams"],
-					worker_name: hit._source["worker_name"],
-				}
+					'@timestamp': hit._source['@timestamp'],
+					new_participant_id: hit._source['new_participant_id'],
+					new_participant_session: hit._source['new_participant_session'],
+					node_role: hit._source['node_role'],
+					streams: hit._source['streams'],
+					worker_name: hit._source['worker_name'],
+				};
 				return json;
-			})
+			});
 		} else {
-			return []
+			return [];
 		}
 	}
 }

@@ -1,5 +1,5 @@
-import fs = require('fs');
-import https = require('https');
+import * as fs from 'fs';
+import * as https from 'https';
 import * as express from 'express';
 import { APPLICATION_MODE, EMULATED_USER_TYPE, SERVER_PORT, WEBSOCKET_PORT } from './config';
 import { HackService } from './services/hack.service';
@@ -12,8 +12,8 @@ import { app as qoeController } from './controllers/qoe.controller';
 import { InstanceService } from './services/instance.service';
 import { ApplicationMode, EmulatedUserType } from './types/config.type';
 import { WsService } from './services/ws.service';
-import WebSocket = require('ws');
-import nodeCleanup = require('node-cleanup');
+import * as WebSocket from 'ws';
+import * as nodeCleanup from 'node-cleanup';
 
 import { BrowserManagerService } from './services/browser-manager.service';
 import { killAllDetached } from './utils/run-script';
@@ -61,7 +61,7 @@ server.listen(SERVER_PORT, async () => {
 	const instanceService = InstanceService.getInstance();
 
 	try {
-		if (!fs.existsSync(`${process.env.PWD}/src/assets/mediafiles`)){
+		if (!fs.existsSync(`${process.env.PWD}/src/assets/mediafiles`)) {
 			fs.mkdirSync(`${process.env.PWD}/src/assets/mediafiles`);
 		}
 		if (APPLICATION_MODE === ApplicationMode.PROD) {
@@ -80,11 +80,11 @@ server.listen(SERVER_PORT, async () => {
 		hack.platform();
 		hack.allowSelfSignedCertificate();
 
-		const pythonpath = process.env['PYTHONPATH']
+		const pythonpath = process.env['PYTHONPATH'];
 		if (!pythonpath) {
-			process.env['PYTHONPATH'] = pythonpath + ':' + process.env['PWD']
+			process.env['PYTHONPATH'] = pythonpath + ':' + process.env['PWD'];
 		} else {
-			process.env['PYTHONPATH'] = process.env['PWD']
+			process.env['PYTHONPATH'] = process.env['PWD'];
 		}
 
 		nodeCleanup(() => {
