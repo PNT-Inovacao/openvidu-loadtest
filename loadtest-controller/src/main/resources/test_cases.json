@@ -1,18 +1,17 @@
 {
-	"testcases": [
-		{
-			"typology": "N:N",
-			"participants": ["3"],
-			"sessions": "infinite",
-			"browserMode": "EMULATE",
-			"resolution": "640x480",
-			"recording": false,
-			"headless": false,
-			"desciption": "This test case will add infinite sessions (until it reaches its limit) of publishers that the array of participants indicates"
-		},
-		{
-			"typology": "TERMINATE",
-			"desciption": "This terminate all Ec2 instances"
-		}
-	]
+  "testcases": [
+    {
+      "typology": "N:N",
+      "participants": ["1", "2"],
+      "sessions": "5",
+      "browserMode": "EMULATE",
+      "resolution": "1280x720",
+      "openviduRecordingMode": "COMPOSED",
+      "description": "This test case will add infinite sessions (until it reaches its limit) of publishers that the array of participants indicates"
+    },
+    {
+      "typology": "TERMINATE",
+      "description": "This terminate all Ec2 instances"
+    }
+  ]
 }

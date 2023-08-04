@@ -100,26 +100,29 @@ public class ElasticSearchClient {
 		return pingSuccess;
 	}
 
-	//private double getCurrentOpenViduCpu() throws IOException {
-//
-//	SearchRequest searchRequest = new SearchRequest("openvidu");
-//	SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-//	searchSourceBuilder.query(QueryBuilders.matchQuery("elastic_type", MONITORING_STATS));
-//	searchSourceBuilder.sort("timestamp", SortOrder.DESC).size(1);
-//	searchRequest.source(searchSourceBuilder);
-//
-//	SearchResponse searchResponse = this.client.search(searchRequest, RequestOptions.DEFAULT);
-//
-//	JsonObject json = jsonUtils.getJson(searchResponse.getHits().getHits()[0].getSourceAsString());
-//
-//	Timestamp stamp = new Timestamp(json.get("timestamp").getAsLong());
-//	Date date = new Date(stamp.getTime());
-//	System.out.println(date);
-//
-//	System.out.println("CPU USAGE " + json.get("cpu").getAsDouble());
-//
-//	return Double.parseDouble(df2.format(json.get("cpu").getAsDouble()));
-//}
+	// private double getCurrentOpenViduCpu() throws IOException {
+	//
+	// SearchRequest searchRequest = new SearchRequest("openvidu");
+	// SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+	// searchSourceBuilder.query(QueryBuilders.matchQuery("elastic_type",
+	// MONITORING_STATS));
+	// searchSourceBuilder.sort("timestamp", SortOrder.DESC).size(1);
+	// searchRequest.source(searchSourceBuilder);
+	//
+	// SearchResponse searchResponse = this.client.search(searchRequest,
+	// RequestOptions.DEFAULT);
+	//
+	// JsonObject json =
+	// jsonUtils.getJson(searchResponse.getHits().getHits()[0].getSourceAsString());
+	//
+	// Timestamp stamp = new Timestamp(json.get("timestamp").getAsLong());
+	// Date date = new Date(stamp.getTime());
+	// System.out.println(date);
+	//
+	// System.out.println("CPU USAGE " + json.get("cpu").getAsDouble());
+	//
+	// return Double.parseDouble(df2.format(json.get("cpu").getAsDouble()));
+	// }
 
 	public double getMediaNodeCpu() {
 
@@ -145,7 +148,7 @@ public class ElasticSearchClient {
 
 			double cpu = json.get("system").getAsJsonObject().get("cpu").getAsJsonObject().get("total")
 					.getAsJsonObject().get("norm").getAsJsonObject().get("pct").getAsDouble();
-			log.info("Media node CPU is {}", cpu * 100);
+			log.info("(custom) Media node CPU is {}", cpu * 100);
 			return Double.parseDouble(df2.format(cpu * 100));
 
 		} catch (IOException e) {
